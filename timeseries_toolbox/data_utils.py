@@ -84,6 +84,7 @@ def load_data(
 def make_data_splits(
     dataset: TensorDataset,
     train_proportion: float = 0.9,
+    shuffle: bool = False,
 ) -> tuple[Subset, Subset]:
     """
     Given a dataset, split it into training, validation, and test sets.
@@ -91,6 +92,7 @@ def make_data_splits(
     Args:
         dataset: The dataset to split.
         train_proportion: The fraction of the dataset to use for training.
+        shuffle: Whether to shuffle the dataset before splitting.   
 
     Returns:
         A tuple containing the training, validation, and test data loaders.
@@ -98,10 +100,17 @@ def make_data_splits(
     num_samples = len(dataset)
     train_size = int(num_samples * train_proportion)
     val_size = num_samples - train_size
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset,
-        [train_size, val_size],
-    )
+    if shuffle:
+        train_dataset, val_dataset = torch.utils.data.random_split(
+            dataset,
+            [train_size, val_size],
+        )
+    else:
+        indices = torch.arange(num_samples)
+        train_indices = indices[:train_size]
+        val_indices = indices[train_size:]
+        train_dataset = Subset(dataset, train_indices)
+        val_dataset = Subset(dataset, val_indices)
     return train_dataset, val_dataset
 
 

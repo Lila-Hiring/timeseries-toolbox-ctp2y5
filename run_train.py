@@ -4,6 +4,7 @@ from pathlib import Path
 
 from timeseries_toolbox.data_utils import prepare_data
 from timeseries_toolbox.models.simple_nn import SimpleNN
+from timeseries_toolbox.models.gaussian_transformer import GaussianTransformer
 from timeseries_toolbox.train import train_model, plot_training
 
 
@@ -17,7 +18,7 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        choices=["simple_nn"],
+        choices=["simple_nn", "gaussian_transformer"],
     )
     parser.add_argument(
         "--data",
@@ -53,6 +54,17 @@ def main():
             data_dim=train.dataset[0][0].shape[-1],
             hidden_dim=64,
             network_depth=2,
+            in_mean=normalization["x_mean"],
+            in_std=normalization["x_std"],
+            out_mean=normalization["y_mean"],
+            out_std=normalization["y_std"],
+        )
+    elif args.model == "gaussian_transformer":
+        model = GaussianTransformer(
+            data_dim=train.dataset[0][0].shape[-1],
+            embedding_dim=64,
+            max_seq_len=100,
+            num_blocks=2,
             in_mean=normalization["x_mean"],
             in_std=normalization["x_std"],
             out_mean=normalization["y_mean"],

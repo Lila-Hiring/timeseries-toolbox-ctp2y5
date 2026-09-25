@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 from timeseries_toolbox.data_utils import prepare_data
 from timeseries_toolbox.models.simple_nn import SimpleNN
+from timeseries_toolbox.models.gaussian_transformer import GaussianTransformer
 
 
 ###########################################################################
@@ -26,7 +27,7 @@ parser.add_argument(
 parser.add_argument(
     "--model",
     type=str,
-    choices=["simple_nn"],
+    choices=["simple_nn", "gaussian_transformer"],
 )
 parser.add_argument(
     "--data",
@@ -79,6 +80,17 @@ if args.model == "simple_nn":
         out_mean=None,
         out_std=None,
     )
+elif args.model == "gaussian_transformer":
+    model = GaussianTransformer(
+        data_dim=train.dataset[0][0].shape[-1],
+        embedding_dim=64,
+        max_seq_len=100,
+        num_blocks=2,
+        in_mean=None,
+        in_std=None,
+        out_mean=None,
+        out_std=None,
+    )
 else:
     raise ValueError(f"Unknown model type: {args.model}")
 model.load_state_dict(
@@ -120,8 +132,17 @@ for i in range(full_obs.shape[1]):
         color="cornflowerblue",
         alpha=0.6,
     )
+    if args.plot_uq:
+        axs[i // 2, i % 2].fill_between(
+            steps,
+            preds.mean(dim=0)[:, i] - preds.std(dim=0)[:, i],
+            preds.mean(dim=0)[:, i] + preds.std(dim=0)[:, i],
+            color="cornflowerblue",
+            alpha=0.3,
+        )
     axs[i // 2, i % 2].set_title(f"Feature {i}")
     axs[i // 2, i % 2].legend()
+    axs[i // 2, i % 2].axvline(args.num_init_obs, color="red", linestyle=":")
 plt.show()
 if args.plot_path:
     plt.savefig(f'{args.plot_path}/predictions.png', dpi=300, bbox_inches='tight')
